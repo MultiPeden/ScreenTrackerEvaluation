@@ -11,13 +11,24 @@ fileInDisp   = fopen(fileInNameDisp,'r');
 fileINExtra  = fopen(fileInNameExtra,'r');
 fileINSpring = fopen(fileInNameSpring,'r');
 
-
+% disp, extra, spring, n
 results = getErrors(fileINTruth,fileInDisp,fileINExtra,fileINSpring);
 S = sum(results);
-resultsNormalized = [S(1) S(2) S(3)]/S(4);
-DisposError = sqrt(resultsNormalized(1))
-ExtrapError = sqrt(resultsNormalized(2))
-SpringError = sqrt(resultsNormalized(3))
+
+O = size(results);
+bucket = O(1)/3;
+B1 = sum(results(1:bucket,:));
+resultsDisp = sqrt([B1(1) B1(2) B1(3)]/B1(4))
+
+B2 = sum(results(bucket+1:bucket*2,:));
+resultsExtra = sqrt([B2(1) B2(2) B2(3)]/B2(4))
+B3 = sum(results(bucket*2+1:bucket*3,:));
+resultsSpring = sqrt([B3(1) B3(2) B3(3)]/B3(4))
+
+%resultsNormalized = [S(1) S(2) S(3)]/S(4);
+%DisposError = sqrt(resultsNormalized(1))
+%ExtrapError = sqrt(resultsNormalized(2))
+%SpringError = sqrt(resultsNormalized(1))
 
 
 
@@ -27,6 +38,8 @@ fclose(fileINExtra);
 fclose(fileINSpring);
 
 %%
+
+
 
 function results = getErrors(fileINTruth,fileInDisp,fileINExtra,fileINSpring)
 fileSize = linecount(fileINTruth);
@@ -78,11 +91,11 @@ if occlusions > 0
             
             truthVec = [truth.x, truth.y, truth.z];
             distDispo = distDispo + pdist([truthVec
-                disp.x ,disp.y ,disp.z ],'squaredeuclidean');
+                disp.x ,disp.y ,disp.z/1000 ],'squaredeuclidean');
             distExtra = distExtra + pdist([truthVec
-                extra.x ,extra.y ,extra.z ],'squaredeuclidean');
+                extra.x ,extra.y ,extra.z/1000 ],'squaredeuclidean');
             distSpring = distSpring + pdist([truthVec
-                spring.x ,spring.y ,spring.z ],'squaredeuclidean');
+                spring.x ,spring.y ,spring.z/1000 ],'squaredeuclidean');
             
         end
     end

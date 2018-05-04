@@ -5,13 +5,11 @@ colorfileInName = 'data\\trackingcolor.txt';
 fileOutName = 'data\\trackingNullOut.txt';
 imageFileFormat = 'data\\test%d.png';
 colorimageFileFormat = 'data\\test%dcolor.png';
-numOfCols = 16;
+numOfCols = 9;
 
 RunLabelling(fileInName, colorfileInName, fileOutName, imageFileFormat,colorimageFileFormat, numOfCols)
 
 
-
-axis equal;
 
 
 
@@ -23,8 +21,9 @@ fileINcolor = fopen(colorfileInName,'r');
 
 fileOut = fopen(fileOutName,'w');
 frameCounter = 0;
-figIR = figure('units','normalized','outerposition',[0 0 1 1])
-figcolor = figure('units','normalized','outerposition',[0 0 1 1])
+figIR = figure('units','normalized','outerposition',[0 0 1 1]);
+figcolor = figure('units','normalized','outerposition',[0 0 1 1]);
+
 
 while ~feof(fileIN)
     L = frameReader(fileIN);
@@ -43,7 +42,8 @@ while ~feof(fileIN)
         
  
         
-        image(A);
+        imshow(A, hot,'InitialMagnification','fit');
+        
         missing   = drawPoints(L, '');
         L = labelRest(missing, numOfCols, L, frameCounter);
     end
@@ -201,14 +201,14 @@ end
 
 function index  = canGoEast(id, n, numOfCols, idModCols)
 index = id + 1;
-if (index > n ) && ( mod(index, numOfCols) <= idModCols )
+if (index > n ) || ( idModCols ==0 )
     index = -1;
 end
 end
 
 function index  = canGoWest(id,numOfCols, idModCols)
 index = id - 1;
-if (index < 0 ) && ( mod(index, numOfCols) >= idModCols )
+if (index < 0 ) || ( idModCols == numOfCols - 1 )
     index = -1;
 end
 end
