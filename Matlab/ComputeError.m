@@ -1,53 +1,103 @@
 
 
 clear;
-fileInNameTruth  = 'data\\CameraSpacetrackingNullOut.txt';
-fileInNameDisp   = 'data\\trackingDisplacement.txt';
-fileInNameExtra  = 'data\\trackingExtrapolation.txt';
-fileInNameSpring = 'data\\trackingSpring.txt';
+%fileInNameTruth  = 'data\\CameraSpacetrackingNullOut.txt';
+%fileInNameDisp   = 'data\\trackingDisplacement.txt';
+%fileInNameExtra  = 'data\\trackingExtrapolation.txt';
+%fileInNameSpring = 'data\\trackingSpring.txt';
 
-fileINTruth  = fopen(fileInNameTruth,'r');
-fileInDisp   = fopen(fileInNameDisp,'r');
-fileINExtra  = fopen(fileInNameExtra,'r');
-fileINSpring = fopen(fileInNameSpring,'r');
+fileOut = fopen('Evaluation.csv','a');
 
+filedir ='C:\Users\MultiPeden\Documents\GitHub\ScreenTrackerEvaluation\results\log';
+printEvaluationToFile(fileOut,filedir)
+
+
+fclose(fileOut);
+
+
+%%
+
+
+function []  = printEvaluationToFile(fileOut,filedir)
+fprintf(fileOut, 'Run,Model,Location,Intensity,Direction,Value,Occlusions\n');
+directionFiles = dir(filedir);
+    for i = 3:length(directionFiles)
+    Location = directionFiles(i).name;
+    subdirname = [filedir '\' Location];
+    printSingleLocation( subdirname,fileOut,Location)
+    end
+end
+
+
+
+function []  = printSingleLocation( subdirname,fileOut,Location)
+
+
+directionFiles = dir(subdirname);
+    for i = 3:length(directionFiles)
+
+        Direction = directionFiles(i).name;
+        fileInNameTruth =  [subdirname '\' Direction '\CameraSpacetrackingNullOut.txt'];
+        fileInNameDisp =  [subdirname '\' Direction '\trackingDisplacement.txt'];
+        fileInNameExtra =  [subdirname '\' Direction '\trackingExtrapolation.txt'];  
+        fileInNameSpring =  [subdirname '\' Direction '\trackingSpring.txt'];
+        fileINTruth  = fopen(fileInNameTruth,'r');
+        fileInDisp   = fopen(fileInNameDisp,'r');
+        fileINExtra  = fopen(fileInNameExtra,'r');  
+        fileINSpring = fopen(fileInNameSpring,'r');
+        printSingleDirection(fileINTruth,fileInDisp,fileINExtra,fileINSpring,Direction,fileOut, Location)
+        fclose(fileINTruth);    
+        fclose(fileInDisp);
+        fclose(fileINExtra);
+        fclose(fileINSpring);
+
+
+    end
+
+end
+
+
+function [] = printSingleDirection(fileINTruth,fileInDisp,fileINExtra,fileINSpring,Direction,fileOut, Location)
 % disp, extra, spring, n
 results = getErrors(fileINTruth,fileInDisp,fileINExtra,fileINSpring);
 
-%writetable(num2string(results),'ole.txt'); 
 
-writetable(array2table(results),'myData.dat')  
-S = sum(results);
-
-O = size(results);
-bucket = O(1)/3;
-
-B1Number = results(1:bucket,:);
-b1norm = ([results(:,1) results(:,2) results(:,3)]./results(:,4))
-
-B1 = sum(results(1:bucket,:));
-
-
-%resultsDisp = sqrt([B1(1) B1(2) B1(3)]/B1(4))
-
-%B2 = sum(results(bucket+1:bucket*2,:));
-%resultsExtra = sqrt([B2(1) B2(2) B2(3)]/B2(4))
-%B3 = sum(results(bucket*2+1:bucket*3,:));
-%resultsSpring = sqrt([B3(1) B3(2) B3(3)]/B3(4))
-
-%resultsNormalized = [S(1) S(2) S(3)]/S(4);
-%DisposError = sqrt(resultsNormalized(1))
-%ExtrapError = sqrt(resultsNormalized(2))
-%SpringError = sqrt(resultsNormalized(1))
+ResNorm = ([results(:,1) results(:,2) results(:,3)]./results(:,4));
+ResNorm = [ResNorm results(:,4)];
 
 
 
-fclose(fileINTruth);
-fclose(fileInDisp);
-fclose(fileINExtra);
-fclose(fileINSpring);
+str = '%i,%s,%s,%s,%s,%f, %i \n';
 
-%%
+
+[rows, cols] = size(ResNorm);
+
+bucket = rows/3;
+
+for i = 1:rows
+    for j = 1:(cols-1)
+
+        if j ==1
+            Model = 'Displacement';
+        elseif j ==2
+            Model = 'Extrapolation';
+        else
+            Model = 'Spring';
+        end
+        
+        if i <= bucket
+            Intensity = 'Light';
+        elseif i <= 2 * bucket
+            Intensity = 'Medium';
+        else
+            Intensity = 'Strong';
+        end
+          fprintf(fileOut,str,i, Model, Location, Intensity, Direction, ResNorm(i,j),ResNorm(i,4));
+    end   
+end
+
+
+end
 
 
 
@@ -57,8 +107,7 @@ results = zeros(fileSize,4);
 for i = 1:fileSize
     [disp, extra, spring, n] = getError(fileINTruth, fileInDisp,...
         fileINExtra, fileINSpring);
-    results(i,:) = [disp extra spring n];
-    
+    results(i,:) = [disp extra spring n];    
 end
 end
 
